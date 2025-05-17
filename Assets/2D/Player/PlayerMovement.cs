@@ -63,6 +63,7 @@ public class PlayerMovement : MonoBehaviour
     }
     private void SetAnimationParameters()
     {
+        if(animator == null) return;
         animator.SetFloat(SpeedParameterName, Mathf.Abs(moveDirection));
         animator.SetBool(isGroundedParameterName, isGrounded);
         animator.SetFloat(verticalVelocityParameterName, verticalVelocity);
