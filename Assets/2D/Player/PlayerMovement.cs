@@ -1,4 +1,4 @@
-using UnityEngine;
+ using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
@@ -177,7 +177,8 @@ public class PlayerMovement : MonoBehaviour
         if (FootstepAudioClips.Length > 0)
         {
             var index = Random.Range(0, FootstepAudioClips.Length);
-            AudioSource.PlayClipAtPoint(FootstepAudioClips[index], groundCheckPoint.position);
+            AudioSource.PlayClipAtPoint(FootstepAudioClips[index], groundCheckPoint.position, 1);
+            Debug.Log("Footstep: " + FootstepAudioClips[index].name);
         }
     }
 #endregion
