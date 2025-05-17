@@ -50,7 +50,7 @@ public class Player2D : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        animator = GetComponent<Animator>();
+        //Set Animator---------------------------------
     }
 
     private void Update()
@@ -67,9 +67,7 @@ public class Player2D : MonoBehaviour
     private void SetAnimationParameters()
     {
         if(animator == null) return;
-        animator.SetFloat(SpeedParameterName, Mathf.Abs(moveDirection));
-        animator.SetBool(isGroundedParameterName, isGrounded);
-        animator.SetFloat(verticalVelocityParameterName, verticalVelocity);
+        //Set All Animator Parameters-----------------------------------------
     }
     private void GroundCheck()
     {
@@ -109,7 +107,7 @@ public class Player2D : MonoBehaviour
         if (Time.time < lastAttackTime + attackCooldown) return;
         lastAttackTime = Time.time;
 
-        animator.Play("Attack");
+        //Play Attack Animation----------------------------------
     }
     private void GiveDamage() {
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
@@ -162,10 +160,10 @@ public class Player2D : MonoBehaviour
         switch (triggerType)
         {
             case AnimationTriggerType.GiveDamage:
-                GiveDamage();
+                //Call GiveDamage
                 break;
             case AnimationTriggerType.Footstep:
-                OnFootstep();
+                //Call Footstep
                 break;
         }
     }
