@@ -34,6 +34,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float attackRange = 0.5f;
     [SerializeField] private LayerMask enemyLayer;
 
+    [Header("SFX")]
+    [SerializeField] private AudioClip[] FootstepAudioClips;
+
     [Header("Dont Edit this")]
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private Animator animator;
@@ -63,6 +66,7 @@ public class PlayerMovement : MonoBehaviour
     }
     private void SetAnimationParameters()
     {
+        if(animator == null) return;
         animator.SetFloat(SpeedParameterName, Mathf.Abs(moveDirection));
         animator.SetBool(isGroundedParameterName, isGrounded);
         animator.SetFloat(verticalVelocityParameterName, verticalVelocity);
@@ -161,11 +165,22 @@ public class PlayerMovement : MonoBehaviour
                 GiveDamage();
                 break;
             case AnimationTriggerType.Footstep:
-                Debug.Log("Footstep");
+                OnFootstep();
                 break;
         }
     }
-    #endregion
+#endregion
+
+#region SFX
+    private void OnFootstep()
+    {
+        if (FootstepAudioClips.Length > 0)
+        {
+            var index = Random.Range(0, FootstepAudioClips.Length);
+            AudioSource.PlayClipAtPoint(FootstepAudioClips[index], groundCheckPoint.position);
+        }
+    }
+#endregion
 
 #region Gizmos
     private void OnDrawGizmos()
