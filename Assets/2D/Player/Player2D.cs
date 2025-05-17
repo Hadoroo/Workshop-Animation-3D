@@ -1,7 +1,7 @@
- using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerMovement : MonoBehaviour
+public class Player2D : MonoBehaviour
 {
     public enum AnimationTriggerType
     {
