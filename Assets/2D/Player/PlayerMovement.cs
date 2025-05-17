@@ -3,10 +3,24 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    public enum AnimationTriggerType
+    {
+        GiveDamage,
+        Footstep,
+    }
+    [Header("Animations Names")]
+    [SerializeField] private string attackAnimationName = "Attack";
+    [Space]
+    [SerializeField] private string SpeedParameterName = "Speed";
+    [SerializeField] private string isGroundedParameterName = "isGrounded";
+    [SerializeField] private string verticalVelocityParameterName = "VerticalVelocity";
+
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float jumpForce = 12f;
+    [SerializeField] private float riseMultiplier = 2f;
     [SerializeField] private float fallMultiplier = 2.5f;
+    [SerializeField] private float lowJumpMultiplier = 2f;
 
     [Header("Ground Check")]
     [SerializeField] private Transform groundCheckPoint;
@@ -14,19 +28,20 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private LayerMask groundLayer;
 
     [Header("Attack")]
+    [SerializeField] private float attackDamage = 1f;
     [SerializeField] private float attackCooldown = 0.5f;
     [SerializeField] private Transform attackPoint;
     [SerializeField] private float attackRange = 0.5f;
     [SerializeField] private LayerMask enemyLayer;
 
-    [Header("Dont Edit this")]    
-    [SerializeField]private Rigidbody2D rb;
-    [SerializeField]private Animator animator;
-    [SerializeField]private float moveDirection = 0f;
+    [Header("Dont Edit this")]
+    [SerializeField] private Rigidbody2D rb;
+    [SerializeField] private Animator animator;
+    [SerializeField] private float moveDirection = 0f;
     [SerializeField] private bool jump = false;
     [SerializeField] private bool isGrounded;
     [SerializeField] private float lastAttackTime = 0f;
-    [SerializeField]public float verticalVelocity = 0f;
+    [SerializeField] public float verticalVelocity = 0f;
 
 
     private void Awake()
@@ -48,9 +63,9 @@ public class PlayerMovement : MonoBehaviour
     }
     private void SetAnimationParameters()
     {
-        animator.SetFloat("Speed", Mathf.Abs(moveDirection));
-        animator.SetBool("isGrounded", isGrounded);
-        animator.SetFloat("VerticalVelocity", verticalVelocity);
+        animator.SetFloat(SpeedParameterName, Mathf.Abs(moveDirection));
+        animator.SetBool(isGroundedParameterName, isGrounded);
+        animator.SetFloat(verticalVelocityParameterName, verticalVelocity);
     }
     private void GroundCheck()
     {
@@ -68,7 +83,15 @@ public class PlayerMovement : MonoBehaviour
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         }
 
-        if(!jump && !isGrounded)
+        if (rb.linearVelocity.y > 0 && !jump)
+        {
+            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.fixedDeltaTime;
+        }
+        else if (rb.linearVelocity.y > 0 && jump)
+        {
+            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (riseMultiplier - 1) * Time.fixedDeltaTime;
+        }
+        else if (rb.linearVelocity.y < 0)
         {
             rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.fixedDeltaTime;
         }
@@ -76,31 +99,37 @@ public class PlayerMovement : MonoBehaviour
         verticalVelocity = rb.linearVelocity.y;
     }
 
+
     private void Attack()
     {
-        // if (Time.time < lastAttackTime + attackCooldown)
-        // return;
+        if (Time.time < lastAttackTime + attackCooldown) return;
+        lastAttackTime = Time.time;
 
-        // lastAttackTime = Time.time;
-
-        // Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
-
-        // foreach (var enemy in hitEnemies)
-        // {
-        //     Debug.Log("Hit: " + enemy.name);
-        // }
+        animator.Play("Attack");
     }
+    private void GiveDamage() {
+        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
+
+        foreach (Collider2D enemyCollider in hitEnemies)
+        {
+            IDamageable damageable = enemyCollider.GetComponent<IDamageable>();
+            if (damageable != null)
+            {
+                damageable.TakeDamage(attackDamage);
+                Debug.Log("Hit: " + enemyCollider.name);
+            }
+        }
+    }
+
     private void Flip()
     {
         if (moveDirection > 0)
         {
             transform.localScale = new Vector3(1, transform.localScale.y, transform.localScale.z);
-            // if (attackPoint != null) attackPoint.localPosition = new Vector3(Mathf.Abs(attackPoint.localPosition.x), attackPoint.localPosition.y, attackPoint.localPosition.z);
         }
         else if (moveDirection < 0)
         {
             transform.localScale = new Vector3(-1, transform.localScale.y, transform.localScale.z);
-            // if (attackPoint != null) attackPoint.localPosition = new Vector3(-Mathf.Abs(attackPoint.localPosition.x), attackPoint.localPosition.y, attackPoint.localPosition.z);
         }
     }
 
@@ -123,10 +152,31 @@ public class PlayerMovement : MonoBehaviour
     }
 
 #endregion
+#region Animation Events
+    public void AnimationEvent(AnimationTriggerType triggerType)
+    {
+        switch (triggerType)
+        {
+            case AnimationTriggerType.GiveDamage:
+                GiveDamage();
+                break;
+            case AnimationTriggerType.Footstep:
+                Debug.Log("Footstep");
+                break;
+        }
+    }
+    #endregion
+
+#region Gizmos
     private void OnDrawGizmos()
     {
-
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(groundCheckPoint.position, groundCheckRadius);
+        if (groundCheckPoint != null)
+            Gizmos.DrawWireSphere(groundCheckPoint.position, groundCheckRadius);
+
+        Gizmos.color = Color.yellow;
+        if (attackPoint != null)
+            Gizmos.DrawWireSphere(attackPoint.position, attackRange);
     }
+#endregion
 }
